@@ -1,7 +1,9 @@
 package org.jeecg.common.util;
 
 import io.minio.*;
+import io.minio.http.Method;
 import lombok.extern.slf4j.Slf4j;
+import org.jeecg.common.util.filter.FileTypeFilter;
 import org.jeecg.common.util.filter.StrAttackFilter;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -68,6 +70,9 @@ public class MinioUtil {
                 minioClient.makeBucket(MakeBucketArgs.builder().bucket(newBucket).build());
                 log.info("create a new bucket.");
             }
+            //update-begin-author:liusq date:20210809 for: 过滤上传文件类型
+            FileTypeFilter.fileTypeFilter(file);
+            //update-end-author:liusq date:20210809 for: 过滤上传文件类型
             InputStream stream = file.getInputStream();
             // 获取文件名
             String orgName = file.getOriginalFilename();
@@ -154,9 +159,11 @@ public class MinioUtil {
     public static String getObjectURL(String bucketName, String objectName, Integer expires) {
         initMinio(minioUrl, minioName,minioPass);
         try{
+            //update-begin---author:liusq  Date:20220121  for：获取文件外链报错提示method不能为空，导致文件下载和预览失败----
             GetPresignedObjectUrlArgs objectArgs = GetPresignedObjectUrlArgs.builder().object(objectName)
                     .bucket(bucketName)
-                    .expiry(expires).build();
+                    .expiry(expires).method(Method.GET).build();
+            //update-begin---author:liusq  Date:20220121  for：获取文件外链报错提示method不能为空，导致文件下载和预览失败----
             String url = minioClient.getPresignedObjectUrl(objectArgs);
             return URLDecoder.decode(url,"UTF-8");
         }catch (Exception e){
